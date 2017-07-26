@@ -578,6 +578,9 @@ function Player:onUseWeapon(normalDamage, elementType, elementDamage)
 				local percentDamage, enchantPercent = 0, weapon:getImbuementPercent(slotEnchant)
 				local typeEnchant = weapon:getImbuementType(i) or ""
 				if (typeEnchant ~= "") then
+					percentDamage = normalDamage*(enchantPercent/100)
+                    		  	normalDamage = normalDamage - percentDamage
+                   	         	elementDamage = weapon:getType():getAttack()*(enchantPercent/100)
 					useStaminaImbuing(self:getId(), weapon:getUniqueId())
 				end
 
@@ -597,6 +600,44 @@ function Player:onUseWeapon(normalDamage, elementType, elementDamage)
 	end
 	return normalDamage, elementType, elementDamage
 end
+
+ function Player:onCombatSpell(normalDamage, elementDamage, elementType)
+	local weapon = self:getSlotItem(CONST_SLOT_LEFT)
+	if not weapon or weapon:getType():getWeaponType() == WEAPON_SHIELD then
+		weapon = self:getSlotItem(CONST_SLOT_RIGHT)
+	end
+
+	-- Imbuement
+	if (weapon and weapon:getType():getImbuingSlots() > 0) then
+		for i = 1, weapon:getType():getImbuingSlots() do
+			local slotEnchant = weapon:getSpecialAttribute(i)
+			if (slotEnchant) then
+				local percentDamage, enchantPercent = 0, weapon:getImbuementPercent(slotEnchant)
+				local typeEnchant = weapon:getImbuementType(i) or ""
+				if (typeEnchant ~= "") then
+				  percentDamage = normalDamage*(enchantPercent/100)
+                    		  normalDamage = normalDamage - percentDamage
+                   	          elementDamage = weapon:getType():getAttack()*(enchantPercent/100)
+				  useStaminaImbuing(self:getId(), weapon:getUniqueId())
+				end
+
+			if (typeEnchant == "firedamage") then
+					elementType = COMBAT_FIREDAMAGE
+				elseif (typeEnchant == "earthdamage") then
+					elementType = COMBAT_EARTHDAMAGE
+				elseif (typeEnchant == "icedamage") then
+					elementType = COMBAT_ICEDAMAGE
+				elseif (typeEnchant == "energydamage") then
+					elementType = COMBAT_ENERGYDAMAGE
+				elseif (typeEnchant == "deathdamage") then
+					elementType = COMBAT_DEATHDAMAGE
+				end
+			end
+		end
+	end
+	return normalDamage, elementType, elementDamage
+end
+
 
 function Player:onGainExperience(source, exp, rawExp)
 	if not source or source:isPlayer() then
